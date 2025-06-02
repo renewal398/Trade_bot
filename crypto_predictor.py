@@ -45,8 +45,8 @@ def load_parameters(config_file="config.json"):
         "stoch_smooth_k": 3,
         "stoch_smooth_d": 3,
         # Email settings
-        "sender_email": "YOUR_EMAIL@gmail.com",  # Replace with your sender email
-        "sender_password": "",                   # Replace with your sender email or app password
+        "sender_email": "renewal39@gmail.com",  # Replace with your sender email
+        "sender_password": "iqgq ygia kfsx ybrw",                   # Replace with your sender email or app password
         "smtp_server": "smtp.gmail.com",
         "smtp_port": 587
     }
