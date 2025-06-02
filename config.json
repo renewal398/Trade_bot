@@ -1,0 +1,20 @@
+{
+    "emaFastLen": 50,
+    "emaSlowLen": 200,
+    "rsiLen": 14,
+    "stochLen": 14,
+    "bbLen": 20,
+    "bbMult": 2.0,
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "macd_signal": 9,
+    "rsi_threshold_long": 55,
+    "rsi_threshold_short": 45,
+    "volAvg_window": 20,
+    "stoch_smooth_k": 3,
+    "stoch_smooth_d": 3,
+    "sender_email": "renewal398@gmail.com",     
+    "sender_password": "iqgq ygia kfsx ybrw",   
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587
+}
