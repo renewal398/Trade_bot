@@ -81,24 +81,17 @@ exchange = ccxt.mexc({'enableRateLimit': True})
 # -------------------------------
 symbols = [
     "MOEW/USDT",
-    "MMVG/USDT",
     "URO/USDT",
     "AI16Z/USDT",
     "AVAAI/USDT",
     "PIPPIN/USDT",
-    "DOGEETH/USDT",
     "YNE/USDT",
     "UFD/USDT",
     "PEPU/USDT",
     "GORK/USDT",   # Gork AI Agent (GORK)
     "SOON/USDT",   # Soon (SOON)
-    "E/USDT",      # EagleBuilder (E)
-    "TFNY/USDT",   # TFNY (TFNY)
     "MAI/USDT",    # MuxyAI (MAI)
-    "MAMO/USDT",   # Mamo (MAMO)
     "STAR/USDT",   # Sponstar (STAR)
-    "YEE/USDT",    # Yee Token (YEE)
-    "LNR/USDT",    # LiNEAR Protocol (LNR)
     "GOONC/USDT",  # Gooncoin (GOONC)
     "SUN/USDT",    # Sun Token (SUN)
     "SHIB/USDT",   # Shiba Inu (SHIB)
