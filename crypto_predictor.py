@@ -83,6 +83,8 @@ symbols = [
     "MOEW/USDT",
     "URO/USDT",
     "AI16Z/USDT",
+    "FLOCK/USDT",
+    "SUI/USDT",
     "AVAAI/USDT",
     "PIPPIN/USDT",
     "YNE/USDT",
