@@ -15,7 +15,7 @@
     "stoch_smooth_d": 3,
     "take_profit_pct": 0.04,
     "stop_loss_pct": 0.02,
-    "leverage": 10
+    "leverage": 10,
     "sender_email": "renewal398@gmail.com",     
     "sender_password": "iqgq ygia kfsx ybrw",   
     "smtp_server": "smtp.gmail.com",
