@@ -297,34 +297,39 @@ def main():
             sl_pct = params.get("stop_loss_pct", 0.02)
             leverage = params.get("leverage", 1)
 
+            # Safeguard: Avoid division by zero
+            if last_close <= 0:
+                logging.error(f"Invalid last_close price for {symbol}: {last_close}")
+                continue
+
             # For long (buy) signal:
             if longSignal:
                 take_profit = last_close * (1 + tp_pct)
                 stop_loss = last_close * (1 - sl_pct)
                 # Formula: Profit % = ((TakeProfit - Entry Price) / Entry Price) * Leverage * 100%
                 profit_formula = (f"Profit formula (Long): ((TakeProfit - Entry Price) / Entry Price) * Leverage * 100%.\n"
-                                  f"In numbers: (({take_profit:.2f} - {last_close:.2f}) / {last_close:.2f}) * {leverage} * 100 = "
-                                  f"{((take_profit - last_close) / last_close) * leverage * 100:.2f}%")
-                message = (f"Buy signal triggered for {symbol} at price {last_close:.2f}.\n"
-                           f"Take Profit: {take_profit:.2f}, Stop Loss: {stop_loss:.2f}.\n"
+                                  f"In numbers: (({take_profit:.6f} - {last_close:.6f}) / {last_close:.6f}) * {leverage} * 100 = "
+                                  f"{((take_profit - last_close) / last_close) * leverage * 100:.6f}%")
+                message = (f"Buy signal triggered for {symbol} at price {last_close:.6f}.\n"
+                           f"Take Profit: {take_profit:.6f}, Stop Loss: {stop_loss:.6f}.\n"
                            f"{profit_formula}")
                 send_alert(message)
-            
+
             # For short (sell) signal:
             elif shortSignal:
                 take_profit = last_close * (1 - tp_pct)
                 stop_loss = last_close * (1 + sl_pct)
                 # Formula for short: Profit % = ((Entry Price - TakeProfit) / Entry Price) * Leverage * 100%
                 profit_formula = (f"Profit formula (Short): ((Entry Price - TakeProfit) / Entry Price) * Leverage * 100%.\n"
-                                  f"In numbers: (({last_close:.2f} - {take_profit:.2f}) / {last_close:.2f}) * {leverage} * 100 = "
-                                  f"{((last_close - take_profit) / last_close) * leverage * 100:.2f}%")
-                message = (f"Sell signal triggered for {symbol} at price {last_close:.2f}.\n"
-                           f"Take Profit: {take_profit:.2f}, Stop Loss: {stop_loss:.2f}.\n"
+                                  f"In numbers: (({last_close:.6f} - {take_profit:.6f}) / {last_close:.6f}) * {leverage} * 100 = "
+                                  f"{((last_close - take_profit) / last_close) * leverage * 100:.6f}%")
+                message = (f"Sell signal triggered for {symbol} at price {last_close:.6f}.\n"
+                           f"Take Profit: {take_profit:.6f}, Stop Loss: {stop_loss:.6f}.\n"
                            f"{profit_formula}")
                 send_alert(message)
             else:
-                logging.info(f"No signal for {symbol} at {df.iloc[-1]['timestamp']} (Close: {last_close:.2f})")
-            
+                logging.info(f"No signal for {symbol} at {df.iloc[-1]['timestamp']} (Close: {last_close:.6f})")
+
             # Sleep briefly between requests to honor rate limits
             time.sleep(1)
         except Exception as e:
