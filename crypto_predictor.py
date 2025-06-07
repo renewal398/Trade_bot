@@ -148,6 +148,7 @@ def compute_indicators(df):
             0,
             (df['rsi'] - df['rsi_min']) / (df['rsi_max'] - df['rsi_min'])
         )
+
         df['k'] = df['stochRSI'].rolling(window=params["stoch_smooth_k"]).mean()
         df['d'] = df['k'].rolling(window=params["stoch_smooth_d"]).mean()
 
