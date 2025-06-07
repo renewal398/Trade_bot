@@ -140,16 +140,20 @@ def compute_indicators(df):
         rsi_indicator = ta.momentum.RSIIndicator(df['close'], window=rsiLen)
         df['rsi'] = rsi_indicator.rsi()
 
-        # === True Stochastic RSI ===
-        df['rsi_min'] = df['rsi'].rolling(window=stochLen).min()
-        df['rsi_max'] = df['rsi'].rolling(window=stochLen).max()
-        df['stochRSI'] = np.where(
-            (df['rsi_max'] - df['rsi_min']) == 0,
-            0,
-            (df['rsi'] - df['rsi_min']) / (df['rsi_max'] - df['rsi_min'])
-        )
-        df['k'] = df['stochRSI'].rolling(window=params["stoch_smooth_k"]).mean()
-        df['d'] = df['k'].rolling(window=params["stoch_smooth_d"]).mean()
+        # Calculate the minimum and maximum RSI over the stochLen periods
+df['rsi_min'] = df['rsi'].rolling(window=stochLen).min()
+df['rsi_max'] = df['rsi'].rolling(window=stochLen).max()
+
+# Calculate Stochastic RSI using np.where
+df['stochRSI'] = np.where(
+    (df['rsi_max'] - df['rsi_min']) == 0,
+    0,
+    (df['rsi'] - df['rsi_min']) / (df['rsi_max'] - df['rsi_min'])
+)
+
+# Calculate smoothed lines k and d
+df['k'] = df['stochRSI'].rolling(window=params["stoch_smooth_k"]).mean()
+df['d'] = df['k'].rolling(window=params["stoch_smooth_d"]).mean()
 
         # === Bollinger Bands ===
         df['basis'] = df['close'].rolling(window=bbLen).mean()
