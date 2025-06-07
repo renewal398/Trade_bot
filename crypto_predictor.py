@@ -30,28 +30,31 @@ def load_parameters(config_file="config.json"):
     If the file is not found, default parameters are returned.
     """
     defaults = {
-    "emaFastLen": 50,
-    "emaSlowLen": 200,
-    "rsiLen": 14,
-    "stochLen": 14,
-    "bbLen": 20,
-    "bbMult": 2.0,
-    "macd_fast": 12,
-    "macd_slow": 26,
-    "macd_signal": 9,
-    "rsi_threshold_long": 55,
-    "rsi_threshold_short": 45,
-    "volAvg_window": 20,
-    "stoch_smooth_k": 3,
-    "stoch_smooth_d": 3,
-    "take_profit_pct": 0.04,
-    "stop_loss_pct": 0.02,
-    "leverage": 10,
-    "sender_email": "renewal398@gmail.com",     
-    "sender_password": "iqgq ygia kfsx ybrw",   
-    "smtp_server": "smtp.gmail.com",
-    "smtp_port": 587
-}
+        "emaFastLen": 50,
+        "emaSlowLen": 200,
+        "rsiLen": 14,
+        "stochLen": 14,
+        "bbLen": 20,
+        "bbMult": 2.0,
+        "macd_fast": 12,
+        "macd_slow": 26,
+        "macd_signal": 9,
+        "rsi_threshold_long": 55,
+        "rsi_threshold_short": 45,
+        "volAvg_window": 20,
+        "stoch_smooth_k": 3,
+        "stoch_smooth_d": 3,
+        "take_profit_pct": 0.04,  # still available if needed elsewhere
+        "stop_loss_pct": 0.02,    # still available if needed elsewhere
+        "leverage": 10,
+        # New keys for ATR-based stop loss / take profit:
+        "take_profit_atr_multiplier": 2,
+        "stop_loss_atr_multiplier": 1,
+        "sender_email": "renewal398@gmail.com",     
+        "sender_password": "iqgq ygia kfsx ybrw",   
+        "smtp_server": "smtp.gmail.com",
+        "smtp_port": 587
+    }
     if os.path.exists(config_file):
         try:
             with open(config_file, 'r') as f:
@@ -115,7 +118,7 @@ def compute_indicators(df):
     """
     Compute technical indicators similar to the Pine script.
     Adds EMAs, MACD, RSI, Stochastic RSI, Bollinger Bands, volume filter,
-    and price action confirmation to the DataFrame.
+    price action confirmation, and ATR to the DataFrame.
     """
     try:
         # === EMAs ===
@@ -141,7 +144,7 @@ def compute_indicators(df):
         df['rsi_min'] = df['rsi'].rolling(window=stochLen).min()
         df['rsi_max'] = df['rsi'].rolling(window=stochLen).max()
         df['stochRSI'] = np.where(
-            (df['rsi_max'] - df['rsi_min']) == 0,
+            (df['rsi_max'] - 0,
             0,
             (df['rsi'] - df['rsi_min']) / (df['rsi_max'] - df['rsi_min'])
         )
@@ -163,6 +166,15 @@ def compute_indicators(df):
         df['bullishBreakout'] = df['close'] > df['prevHigh']
         df['bearishBreakdown'] = df['close'] < df['prevLow']
 
+        # === ATR Calculation ===
+        atr_indicator = ta.volatility.AverageTrueRange(
+            high=df['high'], 
+            low=df['low'], 
+            close=df['close'], 
+            window=14  # You can adjust the period as needed
+        )
+        df['atr'] = atr_indicator.average_true_range()
+
         logging.info("Technical indicators computed successfully.")
         return df
     except Exception as e:
@@ -181,9 +193,9 @@ def check_signals(df):
         if df is None or df.empty:
             logging.warning("DataFrame is empty. Cannot check signals.")
             return False, False
-        
+
         latest = df.iloc[-1]
-        
+
         longCondition = (
             latest['close'] > latest['emaFast'] and
             latest['close'] > latest['emaSlow'] and
@@ -220,7 +232,7 @@ def check_signals(df):
 def send_alert(message):
     """
     Sends an email alert to the designated recipient.
-    For this example, the recipient is set to prakashsteve5@gmail.com.
+    For this example, the recipient is set to a hardcoded email.
     """
     try:
         subject = "Trading Bot Alert"
@@ -253,7 +265,7 @@ def send_alert(message):
         logging.error(f"Error sending email alert: {e}")
 
 # -------------------------------
-# Main Execution Flow (Looping Through Symbols)
+# Main Function: Trading Logic
 # -------------------------------
 def main():
     timeframe = '1h'
@@ -267,7 +279,7 @@ def main():
                 logging.error(f"No data fetched for {symbol}. Skipping.")
                 continue
 
-            # Compute technical indicators (assumed to include ATR)
+            # Compute technical indicators (including ATR)
             df = compute_indicators(df)
 
             # Check for signals
@@ -275,54 +287,56 @@ def main():
 
             # Get the last close price for calculations
             last_close = df.iloc[-1]['close']
-            # Read leverage from config (with default) even if we are not using percentage-based parameters anymore 
             leverage = params.get("leverage", 1)
             
-            # Safeguard: Avoid division by zero
+            # Safeguard against invalid price
             if last_close <= 0:
                 logging.error(f"Invalid last_close price for {symbol}: {last_close}")
                 continue
             
             # Use ATR for stop loss and take profit calculations
-            # If the ATR is not in the DataFrame, we fall back to an approximate value (2% of the price)
             atr_value = df.iloc[-1]['atr'] if 'atr' in df.columns else last_close * 0.02
-            # You can tune these multipliers from your config (defaults: 2 for TP, 1 for SL)
             tp_atr_multiplier = params.get("take_profit_atr_multiplier", 2)
             sl_atr_multiplier = params.get("stop_loss_atr_multiplier", 1)
 
-            # For long (buy) signal:
+            # For a long (buy) signal:
             if longSignal:
                 take_profit = last_close + (atr_value * tp_atr_multiplier)
                 stop_loss = last_close - (atr_value * sl_atr_multiplier)
-                # Formula: Profit % = ((TakeProfit - Entry Price) / Entry Price) * Leverage * 100%
-                profit_formula = (f"Profit formula (Long): ((TakeProfit - Entry Price) / Entry Price) * Leverage * 100%.\n"
-                                  f"In numbers: (({take_profit:.6f} - {last_close:.6f}) / {last_close:.6f}) * {leverage} * 100 = "
-                                  f"{((take_profit - last_close) / last_close) * leverage * 100:.6f}%")
-                message = (f"Buy signal triggered for {symbol} at price {last_close:.6f}.\n"
-                           f"Take Profit: {take_profit:.6f}, Stop Loss: {stop_loss:.6f}.\n"
-                           f"{profit_formula}")
+                profit_formula = (
+                    f"Profit formula (Long): ((TakeProfit - Entry Price) / Entry Price) * Leverage * 100%.\n"
+                    f"In numbers: (({take_profit:.6f} - {last_close:.6f}) / {last_close:.6f}) * {leverage} * 100 = "
+                    f"{((take_profit - last_close) / last_close) * leverage * 100:.6f}%"
+                )
+                message = (
+                    f"Buy signal triggered for {symbol} at price {last_close:.6f}.\n"
+                    f"Take Profit: {take_profit:.6f}, Stop Loss: {stop_loss:.6f}.\n"
+                    f"{profit_formula}"
+                )
                 send_alert(message)
 
-            # For short (sell) signal:
+            # For a short (sell) signal:
             elif shortSignal:
                 take_profit = last_close - (atr_value * tp_atr_multiplier)
                 stop_loss = last_close + (atr_value * sl_atr_multiplier)
-                # Formula for short: Profit % = ((Entry Price - TakeProfit) / Entry Price) * Leverage * 100%
-                profit_formula = (f"Profit formula (Short): ((Entry Price - TakeProfit) / Entry Price) * Leverage * 100%.\n"
-                                  f"In numbers: (({last_close:.6f} - {take_profit:.6f}) / {last_close:.6f}) * {leverage} * 100 = "
-                                  f"{((last_close - take_profit) / last_close) * leverage * 100:.6f}%")
-                message = (f"Sell signal triggered for {symbol} at price {last_close:.6f}.\n"
-                           f"Take Profit: {take_profit:.6f}, Stop Loss: {stop_loss:.6f}.\n"
-                           f"{profit_formula}")
+                profit_formula = (
+                    f"Profit formula (Short): ((Entry Price - TakeProfit) / Entry Price) * Leverage * 100%.\n"
+                    f"In numbers: (({last_close:.6f} - {take_profit:.6f}) / {last_close:.6f}) * {leverage} * 100 = "
+                    f"{((last_close - take_profit) / last_close) * leverage * 100:.6f}%"
+                )
+                message = (
+                    f"Sell signal triggered for {symbol} at price {last_close:.6f}.\n"
+                    f"Take Profit: {take_profit:.6f}, Stop Loss: {stop_loss:.6f}.\n"
+                    f"{profit_formula}"
+                )
                 send_alert(message)
             else:
                 logging.info(f"No signal for {symbol} at {df.iloc[-1]['timestamp']} (Close: {last_close:.6f})")
 
-            # Sleep briefly between requests to honor rate limits
+            # Sleep briefly between symbols to honor rate limits
             time.sleep(1)
         except Exception as e:
             logging.error(f"Error processing {symbol}: {e}")
-
 
 if __name__ == '__main__':
     main()
