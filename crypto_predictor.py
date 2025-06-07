@@ -144,13 +144,16 @@ def compute_indicators(df):
         df['rsi_min'] = df['rsi'].rolling(window=stochLen).min()
         df['rsi_max'] = df['rsi'].rolling(window=stochLen).max()
         df['stochRSI'] = np.where(
-            (df['rsi_max'] - 0,
-            0,
-            (df['rsi'] - df['rsi_min']) / (df['rsi_max'] - df['rsi_min'])
-        )
+            df['stochRSI'] = np.where(
+    (df['rsi_max'] - df['rsi_min']) == 0,
+    0,
+    (df['rsi'] - df['rsi_min']) / (df['rsi_max'] - df['rsi_min'])
+)
 
-        df['k'] = df['stochRSI'].rolling(window=params["stoch_smooth_k"]).mean()
-        df['d'] = df['k'].rolling(window=params["stoch_smooth_d"]).mean()
+df['k'] = df['stochRSI'].rolling(window=params["stoch_smooth_k"]).mean()
+df['d'] = df['k'].rolling(window=params["stoch_smooth_d"]).mean()
+
+
 
         # === Bollinger Bands ===
         df['basis'] = df['close'].rolling(window=bbLen).mean()
