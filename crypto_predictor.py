@@ -44,10 +44,10 @@ def load_parameters(config_file="config.json"):
         "volAvg_window": 20,
         "stoch_smooth_k": 3,
         "stoch_smooth_d": 3,
-        "take_profit_pct": 0.04,  # still available if needed elsewhere
-        "stop_loss_pct": 0.02,    # still available if needed elsewhere
+        "take_profit_pct": 0.04,  # retained if needed elsewhere
+        "stop_loss_pct": 0.02,    # retained if needed elsewhere
         "leverage": 10,
-        # New keys for ATR-based stop loss / take profit:
+        # New keys for ATR-based stop loss/take profit:
         "take_profit_atr_multiplier": 2,
         "stop_loss_atr_multiplier": 1,
         "sender_email": "renewal398@gmail.com",     
@@ -116,7 +116,7 @@ def fetch_data(symbol, timeframe='1h', limit=300):
 # -------------------------------
 def compute_indicators(df):
     """
-    Compute technical indicators similar to the Pine script.
+    Compute technical indicators.
     Adds EMAs, MACD, RSI, Stochastic RSI, Bollinger Bands, volume filter,
     price action confirmation, and ATR to the DataFrame.
     """
@@ -144,16 +144,12 @@ def compute_indicators(df):
         df['rsi_min'] = df['rsi'].rolling(window=stochLen).min()
         df['rsi_max'] = df['rsi'].rolling(window=stochLen).max()
         df['stochRSI'] = np.where(
-            df['stochRSI'] = np.where(
-    (df['rsi_max'] - df['rsi_min']) == 0,
-    0,
-    (df['rsi'] - df['rsi_min']) / (df['rsi_max'] - df['rsi_min'])
-)
-
-df['k'] = df['stochRSI'].rolling(window=params["stoch_smooth_k"]).mean()
-df['d'] = df['k'].rolling(window=params["stoch_smooth_d"]).mean()
-
-
+            (df['rsi_max'] - df['rsi_min']) == 0,
+            0,
+            (df['rsi'] - df['rsi_min']) / (df['rsi_max'] - df['rsi_min'])
+        )
+        df['k'] = df['stochRSI'].rolling(window=params["stoch_smooth_k"]).mean()
+        df['d'] = df['k'].rolling(window=params["stoch_smooth_d"]).mean()
 
         # === Bollinger Bands ===
         df['basis'] = df['close'].rolling(window=bbLen).mean()
@@ -175,15 +171,14 @@ df['d'] = df['k'].rolling(window=params["stoch_smooth_d"]).mean()
             high=df['high'], 
             low=df['low'], 
             close=df['close'], 
-            window=14  # You can adjust the period as needed
+            window=14  # Adjust this period if needed
         )
         df['atr'] = atr_indicator.average_true_range()
 
         logging.info("Technical indicators computed successfully.")
         return df
     except Exception as e:
-        logging.error(f"Error computing indicators: {e}")
-        return df
+        logging.error(f"Error computing        return df
 
 # -------------------------------
 # Function: Check Signals
@@ -199,7 +194,6 @@ def check_signals(df):
             return False, False
 
         latest = df.iloc[-1]
-
         longCondition = (
             latest['close'] > latest['emaFast'] and
             latest['close'] > latest['emaSlow'] and
@@ -236,7 +230,6 @@ def check_signals(df):
 def send_alert(message):
     """
     Sends an email alert to the designated recipient.
-    For this example, the recipient is set to a hardcoded email.
     """
     try:
         subject = "Trading Bot Alert"
@@ -250,13 +243,11 @@ def send_alert(message):
             logging.error("Sender email credentials are not set. Check your configuration.")
             return
 
-        # Create the email message
         msg = MIMEText(message)
         msg["Subject"] = subject
         msg["From"] = sender_email
         msg["To"] = recipient_email
 
-        # Send the email via SMTP with TLS
         server = smtplib.SMTP(smtp_server, smtp_port)
         server.ehlo()
         server.starttls()
@@ -277,33 +268,25 @@ def main():
 
     for symbol in symbols:
         try:
-            # Fetch data for the symbol
             df = fetch_data(symbol, timeframe, limit)
             if df is None or df.empty:
                 logging.error(f"No data fetched for {symbol}. Skipping.")
                 continue
 
-            # Compute technical indicators (including ATR)
             df = compute_indicators(df)
-
-            # Check for signals
             longSignal, shortSignal = check_signals(df)
 
-            # Get the last close price for calculations
             last_close = df.iloc[-1]['close']
             leverage = params.get("leverage", 1)
-            
-            # Safeguard against invalid price
-            if last_close <= 0:
+
+            0:
                 logging.error(f"Invalid last_close price for {symbol}: {last_close}")
                 continue
-            
-            # Use ATR for stop loss and take profit calculations
+
             atr_value = df.iloc[-1]['atr'] if 'atr' in df.columns else last_close * 0.02
             tp_atr_multiplier = params.get("take_profit_atr_multiplier", 2)
             sl_atr_multiplier = params.get("stop_loss_atr_multiplier", 1)
 
-            # For a long (buy) signal:
             if longSignal:
                 take_profit = last_close + (atr_value * tp_atr_multiplier)
                 stop_loss = last_close - (atr_value * sl_atr_multiplier)
@@ -319,7 +302,6 @@ def main():
                 )
                 send_alert(message)
 
-            # For a short (sell) signal:
             elif shortSignal:
                 take_profit = last_close - (atr_value * tp_atr_multiplier)
                 stop_loss = last_close + (atr_value * sl_atr_multiplier)
@@ -337,7 +319,6 @@ def main():
             else:
                 logging.info(f"No signal for {symbol} at {df.iloc[-1]['timestamp']} (Close: {last_close:.6f})")
 
-            # Sleep briefly between symbols to honor rate limits
             time.sleep(1)
         except Exception as e:
             logging.error(f"Error processing {symbol}: {e}")
