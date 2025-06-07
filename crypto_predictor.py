@@ -80,51 +80,12 @@ exchange = ccxt.mexc({'enableRateLimit': True})
 # List of Symbols to Check
 # -------------------------------
 symbols = [
+    "FLOCK/USDT",
     "MOEW/USDT",
     "URO/USDT",
-    "AI16Z/USDT",
-    "FLOCK/USDT",
-    "SUI/USDT",
-    "AVAAI/USDT",
     "PIPPIN/USDT",
-    "YNE/USDT",
-    "DOGE/USDT",
-    "TRUMP/USDT",
-    "MNT/USDT",
-    "WIF/USDT",
-    "TRX/USDT",
-    "TON/USDT",
-    "TAO/USDT",
-    "KAITO/USDT",
-    "ENA/USDT",
-    "KAS/USDT",
-    "HUMA/USDT",
-    "AVAX/USDT",
-    "LINK/USDT",
-    "AIXBT/USDT",
-    "WLD/USDT",
-    "PNUT/USDT",
-    "OM/USDT",
-    "NXPC/USDT",
-    "SOPH/USDT",
-    "POPCAT/USDT",
-    "UFD/USDT",
-    "PEPU/USDT",
-    "GORK/USDT",   # Gork AI Agent (GORK)
-    "SOON/USDT",   # Soon (SOON)
-    "MAI/USDT",    # MuxyAI (MAI)
-    "STAR/USDT",   # Sponstar (STAR)
-    "GOONC/USDT",  # Gooncoin (GOONC)
-    "SUN/USDT",    # Sun Token (SUN)
-    "SHIB/USDT",   # Shiba Inu (SHIB)
-    "PEPE/USDT",   # Pepe (PEPE)
-    "SOL/USDT",    # Solana (SOL)
-    "XRP/USDT",    # Ripple (XRP)
-    "ADA/USDT",    # Cardano (ADA)
-    "BTC/USDT",    # Bitcoin (BTC)
-    "ETH/USDT",    # Ethereum (ETH)
-    "BNB/USDT",    # Binance Coin (BNB)
-    "PENGU/USDT"   # Pudgy Penguins (PENGU)
+    "AVAAI/USDT",
+    "SUI/USDT"
 ]
 
 # -------------------------------
