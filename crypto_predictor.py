@@ -30,26 +30,28 @@ def load_parameters(config_file="config.json"):
     If the file is not found, default parameters are returned.
     """
     defaults = {
-        "emaFastLen": 50,
-        "emaSlowLen": 200,
-        "rsiLen": 14,
-        "stochLen": 14,
-        "bbLen": 20,
-        "bbMult": 2.0,
-        "macd_fast": 12,
-        "macd_slow": 26,
-        "macd_signal": 9,
-        "rsi_threshold_long": 55,
-        "rsi_threshold_short": 45,
-        "volAvg_window": 20,
-        "stoch_smooth_k": 3,
-        "stoch_smooth_d": 3,
-        # Email settings
-        "sender_email": "renewal39@gmail.com",  # Replace with your sender email
-        "sender_password": "iqgq ygia kfsx ybrw",                   # Replace with your sender email or app password
-        "smtp_server": "smtp.gmail.com",
-        "smtp_port": 587
-    }
+    "emaFastLen": 50,
+    "emaSlowLen": 200,
+    "rsiLen": 14,
+    "stochLen": 14,
+    "bbLen": 20,
+    "bbMult": 2.0,
+    "macd_fast": 12,
+    "macd_slow": 26,
+    "macd_signal": 9,
+    "rsi_threshold_long": 55,
+    "rsi_threshold_short": 45,
+    "volAvg_window": 20,
+    "stoch_smooth_k": 3,
+    "stoch_smooth_d": 3,
+    "take_profit_pct": 0.04,
+    "stop_loss_pct": 0.02,
+    "leverage": 10,
+    "sender_email": "renewal398@gmail.com",     
+    "sender_password": "iqgq ygia kfsx ybrw",   
+    "smtp_server": "smtp.gmail.com",
+    "smtp_port": 587
+}
     if os.path.exists(config_file):
         try:
             with open(config_file, 'r') as f:
