@@ -267,7 +267,7 @@ def main():
                 logging.error(f"No data fetched for {symbol}. Skipping.")
                 continue
 
-            # Compute technical indicators
+            # Compute technical indicators (assumed to include ATR)
             df = compute_indicators(df)
 
             # Check for signals
@@ -275,20 +275,25 @@ def main():
 
             # Get the last close price for calculations
             last_close = df.iloc[-1]['close']
-            # Read percentage values from config (with defaults)
-            tp_pct = params.get("take_profit_pct", 0.04)
-            sl_pct = params.get("stop_loss_pct", 0.02)
+            # Read leverage from config (with default) even if we are not using percentage-based parameters anymore 
             leverage = params.get("leverage", 1)
-
+            
             # Safeguard: Avoid division by zero
             if last_close <= 0:
                 logging.error(f"Invalid last_close price for {symbol}: {last_close}")
                 continue
+            
+            # Use ATR for stop loss and take profit calculations
+            # If the ATR is not in the DataFrame, we fall back to an approximate value (2% of the price)
+            atr_value = df.iloc[-1]['atr'] if 'atr' in df.columns else last_close * 0.02
+            # You can tune these multipliers from your config (defaults: 2 for TP, 1 for SL)
+            tp_atr_multiplier = params.get("take_profit_atr_multiplier", 2)
+            sl_atr_multiplier = params.get("stop_loss_atr_multiplier", 1)
 
             # For long (buy) signal:
             if longSignal:
-                take_profit = last_close * (1 + tp_pct)
-                stop_loss = last_close * (1 - sl_pct)
+                take_profit = last_close + (atr_value * tp_atr_multiplier)
+                stop_loss = last_close - (atr_value * sl_atr_multiplier)
                 # Formula: Profit % = ((TakeProfit - Entry Price) / Entry Price) * Leverage * 100%
                 profit_formula = (f"Profit formula (Long): ((TakeProfit - Entry Price) / Entry Price) * Leverage * 100%.\n"
                                   f"In numbers: (({take_profit:.6f} - {last_close:.6f}) / {last_close:.6f}) * {leverage} * 100 = "
@@ -300,8 +305,8 @@ def main():
 
             # For short (sell) signal:
             elif shortSignal:
-                take_profit = last_close * (1 - tp_pct)
-                stop_loss = last_close * (1 + sl_pct)
+                take_profit = last_close - (atr_value * tp_atr_multiplier)
+                stop_loss = last_close + (atr_value * sl_atr_multiplier)
                 # Formula for short: Profit % = ((Entry Price - TakeProfit) / Entry Price) * Leverage * 100%
                 profit_formula = (f"Profit formula (Short): ((Entry Price - TakeProfit) / Entry Price) * Leverage * 100%.\n"
                                   f"In numbers: (({last_close:.6f} - {take_profit:.6f}) / {last_close:.6f}) * {leverage} * 100 = "
